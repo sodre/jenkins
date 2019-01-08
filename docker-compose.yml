@@ -1,7 +1,7 @@
 jenkins:
-    image: autopilotpattern/jenkins
+    image: sodre/ap-jenkins:lts
     restart: always
-    mem_limit: 8g
+    mem_limit: 4g
     expose:
       - 22
       - 8000
@@ -12,14 +12,14 @@ jenkins:
 
 # reverse proxy for protecting Jenkins w/ TLS
 nginx:
-    image: autopilotpattern/jenkins-nginx
+    image: sodre/ap-jenkins-nginx:1.14
     restart: always
     mem_limit: 256m
     environment:
       - BACKEND=jenkins
       - CONSUL_AGENT=1
-      - ACME_ENV=
-      - ACME_DOMAIN=
+      - ACME_ENV=production
+      - ACME_DOMAIN=ci.conda-forge.0ae.us
     env_file: _env
     labels:
       - triton.cns.services=jenkins-nginx
@@ -33,7 +33,7 @@ nginx:
 # Start with a single host which will bootstrap the cluster.
 # In production we'll want to use an HA cluster.
 consul:
-    image: autopilotpattern/consul:latest
+    image: sodre/ap-consul:1.4.0
     restart: always
     mem_limit: 128m
     expose:
@@ -45,6 +45,7 @@ consul:
       - 8500
     dns:
        - 127.0.0.1
+    env_file: _env
     labels:
       - triton.cns.services=jenkins-consul
     command: >
