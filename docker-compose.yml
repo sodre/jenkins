@@ -2,9 +2,10 @@ jenkins:
     image: autopilotpattern/jenkins
     restart: always
     mem_limit: 8g
-    ports:
-      - 8000
+    expose:
       - 22
+      - 8000
+      - 50000
     labels:
       - triton.cns.services=jenkins
     env_file: _env
@@ -26,11 +27,13 @@ nginx:
       - 80
       - 443
       - 9090
+      - 50000
+
 
 # Start with a single host which will bootstrap the cluster.
 # In production we'll want to use an HA cluster.
 consul:
-    image: progrium/consul:latest
+    image: autopilotpattern/consul:latest
     restart: always
     mem_limit: 128m
     expose:
@@ -44,4 +47,5 @@ consul:
        - 127.0.0.1
     labels:
       - triton.cns.services=jenkins-consul
-    command: -server -bootstrap -ui-dir /ui
+    command: >
+        /usr/local/bin/containerpilot

@@ -9,8 +9,9 @@ jenkins:
     links:
       - consul:consul
     ports:
-      - "8000:8000"
       - "2222:22"
+      - "8000:8000"
+      - "50000:50000"
 
 consul:
     extends:
