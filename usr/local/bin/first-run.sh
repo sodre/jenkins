@@ -129,7 +129,7 @@ create_jenkins_user
 docker_setup
 docker_plugin_setup
 setup_jenkins_home
-get_jobs
+#get_jobs
 
 # verify we're good-to-go
 docker info
