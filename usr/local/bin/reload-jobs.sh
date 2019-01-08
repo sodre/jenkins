@@ -30,12 +30,12 @@ reload() {
 check() {
     # make sure the first job has run at least once so that
     # we've pulled jobs down from GitHub
-    local nextBuild=$(cat ${JENKINS_HOME}/jobs/jenkins-jobs/nextBuildNumber)
-    if [ ${nextBuild} == "1" ]; then
-        curl -XPOST -s --fail -o /dev/null \
-             --user admin:${JENKINS_PASSWD} \
-             http://localhost/job/jenkins-jobs/build
-    fi
+    #local nextBuild=$(cat ${JENKINS_HOME}/jobs/jenkins-jobs/nextBuildNumber)
+    #if [ ${nextBuild} == "1" ]; then
+    #    curl -XPOST -s --fail -o /dev/null \
+    #         --user admin:${JENKINS_PASSWD} \
+    #         http://localhost/job/jenkins-jobs/build
+    #fi
 
     # health check
     curl --fail -s -o /dev/null http://localhost/
