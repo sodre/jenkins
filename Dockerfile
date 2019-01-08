@@ -1,4 +1,4 @@
-FROM jenkins:2.19.3
+FROM jenkins/jenkins:2.150.1
 
 USER root
 
@@ -9,16 +9,14 @@ RUN apt-get update && \
     apt-get install -y \
         apt-transport-https \
         ca-certificates && \
-    apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D && \
+    apt-key adv --no-tty --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D && \
     echo 'deb https://apt.dockerproject.org/repo debian-jessie main' > /etc/apt/sources.list.d/docker.list && \
     apt-get update && \
-    apt-cache policy docker-engine && \
     apt-get install -y \
         authbind \
         xmlstarlet \
         dc \
-        uuid-runtime \
-        docker-engine && \
+        uuid-runtime && \
     rm -rf /var/lib/apt/lists/* && \
     touch /etc/authbind/byport/22 && \
     touch /etc/authbind/byport/80 && \
@@ -54,7 +52,16 @@ COPY etc/containerpilot.json /etc/containerpilot.json
 USER jenkins
 
 # Add Jenkins plugins
-RUN /usr/local/bin/install-plugins.sh git github token-macro docker-plugin
+RUN /usr/local/bin/install-plugins.sh \
+    configuration-as-code \
+    configuration-as-code-support \
+    credentials \
+    docker-plugin \
+    github \
+    github-oauth \
+    github-scm-trait-commit-skip \
+    jdk-tool \
+    token-macro
 
 # Jenkins config and templates
 COPY usr/local/bin/first-run.sh /usr/local/bin/first-run.sh
@@ -63,8 +70,12 @@ COPY usr/local/bin/proclimit.sh /usr/local/bin/proclimit.sh
 COPY usr/local/bin/reload-jobs.sh /usr/local/bin/reload-jobs.sh
 COPY usr/share/jenkins/templates /usr/share/jenkins/templates
 
+# Jenkins-CLI/SSH
 EXPOSE 22
+# Jenkins/HTTP
 EXPOSE 8000
+# JNLP4-connect
+EXPOSE 50000
 
 ENTRYPOINT []
 CMD ["/usr/local/bin/containerpilot", "/usr/local/bin/jenkins.sh"]
