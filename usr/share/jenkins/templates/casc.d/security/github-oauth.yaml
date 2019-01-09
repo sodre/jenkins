@@ -1,0 +1,19 @@
+jenkins:
+  authorizationStrategy:
+    github:
+      adminUserNames: "${GITHUB_ADMIN_USERS}"
+      organizationNames: "${GITHUB_ALLOW_ORGS}"
+      useRepositoryPermissions: true
+      allowAnonymousJobStatusPermission: true
+      allowAnonymousReadPermission: true
+      allowCcTrayPermission: true
+      allowGithubWebHookPermission: true
+      authenticatedUserCreateJobPermission: false
+      authenticatedUserReadPermission: false
+  securityRealm:
+    github:
+      githubWebUri: "https://github.com"
+      githubApiUri: "https://api.github.com"
+      clientID: "${GITHUB_CLIENT_ID}"
+      clientSecret: "${GITHUB_CLIENT_SECRET}"
+      oauthScopes: "read:org,user:email"

@@ -1,0 +1,13 @@
+jenkins:
+  clouds:
+  - docker:
+      name: "Triton"
+      disabled:
+        disabledByChoice: false
+        enabledByChoice: true
+      dockerApi:
+        connectTimeout: 60
+        readTimeout: 60
+        dockerHost:
+          credentialsId: "${TRITON_ACCOUNT:unique-id}"
+          uri: "${DOCKER_HOST}"

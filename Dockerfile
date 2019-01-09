@@ -53,6 +53,7 @@ USER jenkins
 
 # Add Jenkins plugins
 RUN /usr/local/bin/install-plugins.sh \
+    basic-branch-build-strategies \
     configuration-as-code \
     configuration-as-code-support \
     credentials \
@@ -61,7 +62,12 @@ RUN /usr/local/bin/install-plugins.sh \
     github-oauth \
     github-scm-trait-commit-skip \
     jdk-tool \
+    job-restrictions \
     token-macro
+
+# Folder for CasC config files
+ENV CASC_JENKINS_CONFIG /var/jenkins_home/casc.d
+RUN mkdir -p ${CASC_JENKINS_CONFIG}
 
 # Jenkins config and templates
 COPY usr/local/bin/first-run.sh /usr/local/bin/first-run.sh

@@ -98,8 +98,28 @@ check() {
     fi
 
     # setup environment file
-    echo 'JENKINS_PASSWD=' > _env
+    echo '# Jenkins/Github logins' > _env
+    echo 'GITHUB_CLIENT_ID=' >> _env
+    echo 'GITHUB_CLIENT_SECRET=' >> _env
+    echo 'GITHUB_ADMIN_USERS=' >> _env
+    echo 'GITHUB_ALLOW_ORGS=' >> _env
+    echo >> _env
+
+    echo '# Jenkins local logins' >> _env
+    echo 'JENKINS_PASSWD=' >> _env
+    echo >> _env
+
+    echo '# System Admin address' >> _env
+    echo "JENKINS_ADMIN_EMAIL=${SDC_ACCOUNT}@example.com" >> _env
+    echo 'JENKINS_ROOT_URL=https://example.com}' >> _env
+    echo >> _env
+
+    echo '# GitHub Scan Credentials' >> _env
+    echo "GITHUB_API_USER=${SDC_ACCOUNT}" >> _env
     echo 'GITHUB_API_KEY=' >> _env
+    echo >> _env
+
+    echo '# Jenkins Bootstrap Jobs' >> _env
     echo 'GITHUB_JOBS_REPO=' >> _env
     echo 'GITHUB_JOBS_SPEC=' >> _env
     echo >> _env
@@ -119,7 +139,8 @@ check() {
     # munge the private key so that we can pass it into an env var sanely
     # and then unmunge it in our startup script
     echo PRIVATE_KEY=$(cat ${DOCKER_CERT_PATH}/key.pem | tr '\n' '#') >> _env
-    echo 'Edit the _env file to include a JENKINS_PASSWD and GITHUB_* config'
+
+    echo 'Edit the _env file to include a JENKINS_* and GITHUB_* config'
 }
 
 # ---------------------------------------------------

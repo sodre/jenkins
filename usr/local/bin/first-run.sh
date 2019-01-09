@@ -8,32 +8,19 @@ if [ -f "${JENKINS_HOME}/first-started.txt" ]; then
 fi
 date > ${JENKINS_HOME}/first-started.txt
 
-# We setup a default user account so that there are no race conditions when
-# creating your first Jenkins server on the cloud
-create_jenkins_user() {
+# uses GITHUB_CLIENT_{ID,SECRET} or JENKINS_PASSWD to setup the proper security realm
+security_realm_setup() {
     echo
-    echo 'Setting up Jenkins user...'
+    echo 'Setting up Jenkins Security Realm...'
 
-    cp -r /usr/share/jenkins/templates/config.xml ${JENKINS_HOME}
-    mkdir -p ${JENKINS_HOME}/users/admin
-
-    JENKINS_PASSWD=${JENKINS_PASSWD:-$(dd if=/dev/urandom bs=9 count=1 2> /dev/null | base64 | tr -d "\n")}
-    JENKINS_API_TOKEN=${JENKINS_API_TOKEN:-$(dd if=/dev/urandom bs=64 count=1 2> /dev/null | base64 | tr -d "\n")}
-    HASH=$(echo -n "$JENKINS_PASSWD"'{zil0}' | sha256sum | cut -d' ' -f1)
-
-    echo -e "A default Jenkins user has been created with the credentials:"
-    echo -e "login: \e[1madmin\e[0m password: \e[1m$JENKINS_PASSWD"
-    echo -e "\e[0mOnce you login, be sure to change the credentials to your needs."
-
-    xmlstarlet \
-        ed \
-        -u '//passwordHash' -v "zil0:${HASH}" \
-        -u '//apiToken' -v "${JENKINS_API_TOKEN}" \
-        /usr/share/jenkins/templates/users/admin/config.xml \
-        > ${JENKINS_HOME}/users/admin/config.xml
-
-    echo "Setting up Jenkins SSHD to listen on port 22"
-    cp /usr/share/jenkins/templates/org.jenkinsci.main.modules.sshd.SSHD.xml ${JENKINS_HOME}
+    local casc_d="/usr/share/jenkins/templates/casc.d"
+    if [ -n "${GITHUB_CLIENT_ID}" -a -n "${GITHUB_CLIENT_SECRET}" ]; then
+        ln -s ${casc_d}/security/github-oauth.yaml ${JENKINS_HOME}/casc.d/security-github-oauth.yaml
+    elif [ -n "${JENKINS_PASSWD}" ]; then
+        ln -s ${casc_d}/security/local.yaml ${JENKINS_HOME}/casc.d/security-local.yaml
+    else
+        echo "WARNING: You should either set the JENKINS_PASSWD, or the GIHUB_CLIENT variables."
+    fi
 }
 
 
@@ -59,27 +46,32 @@ docker_setup() {
 }
 
 # adds the Triton Docker credentials to the Jenkins Docker plugin
-docker_plugin_setup() {
+docker_credential_setup() {
+     echo
+     echo "Adding Triton Docker credentials to Jenkins..."
+     if [ -z "${TRITON_ACCOUNT}" ]; then
+         echo 'TRITON_ACCOUNT not set. Exiting.'
+         exit 1
+     fi
+
+     xmlstarlet \
+         ed \
+         -u '//com.nirima.jenkins.plugins.docker.utils.DockerDirectoryCredentials/id' \
+         -v ${TRITON_ACCOUNT} \
+         -u '//com.nirima.jenkins.plugins.docker.utils.DockerDirectoryCredentials/path' \
+         -v "${DOCKER_CERT_PATH}" \
+         /usr/share/jenkins/templates/credentials.xml \
+         > ${JENKINS_HOME}/credentials.xml
+}
+
+# adds the Configuration-as-Code to jenkins_home
+casc_setup() {
     echo
-    echo "Adding Triton Docker credentials to Jenkins..."
-    if [ -z "${TRITON_ACCOUNT}" ]; then
-        echo 'TRITON_ACCOUNT not set. Exiting.'
-        exit 1
-    fi
+    echo "Adding CasC files to Jenkins..."
 
-    xmlstarlet \
-        ed \
-        -u '//com.nirima.jenkins.plugins.docker.utils.DockerDirectoryCredentials/id' \
-        -v ${TRITON_ACCOUNT} \
-        /usr/share/jenkins/templates/credentials.xml \
-        > ${JENKINS_HOME}/credentials.xml
-
-    xmlstarlet \
-        ed \
-        -u '//com.nirima.jenkins.plugins.docker.DockerCloud/credentialsId' \
-        -v ${TRITON_ACCOUNT} \
-        /usr/share/jenkins/templates/config.xml \
-        > ${JENKINS_HOME}/config.xml
+    find /usr/share/jenkins/templates/casc.d/ \
+        -maxdepth 1 -type f \
+        -exec cp {} ${JENKINS_HOME}/casc.d \;
 }
 
 
@@ -125,11 +117,12 @@ get_jobs() {
         > ${JENKINS_HOME}/jobs/jenkins-jobs/config.xml
 }
 
-create_jenkins_user
+security_realm_setup
 docker_setup
-docker_plugin_setup
+docker_credential_setup
+casc_setup
 setup_jenkins_home
 #get_jobs
 
 # verify we're good-to-go
-docker info
+# docker info
